@@ -73,7 +73,7 @@ internal class UserServiceImpl(private val userRepository: UserRepository) : Use
     return userRepository.safe(user)
   }
 
-  override fun getUserWithSameLastName(): List<SameUser> {
+  override fun getUsersWithSameLastName(): List<SameUser> {
     return userRepository.findAll()
       .groupBy { it.lastName }
       .map { SameUser(it.key, it.value.count()) }
@@ -81,6 +81,67 @@ internal class UserServiceImpl(private val userRepository: UserRepository) : Use
 
   override fun deleteUser(userId: Int) {
     userRepository.deleteById(userId)
+  }
+}
+```
+
+### API
+
+The last step in order to complete the microservice is creating its public API.
+
+```kotlin
+@RestController("/api/v1/users")
+class UserController(private val userService: UserService) {
+
+  @GetMapping
+  fun getAllUsers(): List<UserDto> {
+    return userService.getAllUsers().map { UserDto.from(it) }
+  }
+
+  @PostMapping
+  fun createUser(@RequestBody @Valid request: UserDto): UserDto {
+    return UserDto.from(userService.createUser(request.firstName, request.lastName))
+  }
+
+  @GetMapping("/same-name")
+  fun sameLastName(): List<SameNameDto> {
+    return userService.getUsersWithSameLastName().map { SameUserDto.from(it) }
+  }
+
+  @DeleteMapping("/{userId}")
+  fun deleteUser(@RequestParam userId: Int) {
+    userService.deleteUser(userId)
+  }
+}
+```
+
+```kotlin
+data class UserDto(
+  var id: Int?,
+
+  @field:NotBlank
+  var firstName: String?,
+
+  @field:NotBlank
+  var lastName: String?
+) {
+  companion object {
+    fun from(user: User): UserDto {
+      return UserDto(user.id, user.firstName, user.lastName)
+    }
+  }
+}
+```
+
+```kotlin
+data class SameUserDto(
+  var lastName: String,
+  var count: Int
+) {
+  companion object {
+    fun from(sameUser: SameUser): SameUserDto {
+      return SameUserDto(sameUser.lastName, sameUser.count)
+    }
   }
 }
 ```
