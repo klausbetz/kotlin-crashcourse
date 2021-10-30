@@ -1,0 +1,11 @@
+spring:
+  application:
+    name: "Project One"
+  datasource:
+    url: jdbc:h2:mem:onedb
+    username: sa
+    password: password
+    driverClassName: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create

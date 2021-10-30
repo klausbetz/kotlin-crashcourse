@@ -1,1 +1,1 @@
-# kotlin-crashcourse
+# Kotlin in a nutshell
