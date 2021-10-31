@@ -13,7 +13,7 @@ We do want to achieve following functionality with our microservice:
 ## Coding guide
 
 <details>
-<summary>Skip this section if you want to do it on your own</summary>
+  <summary>Skip this section if you want to do it on your own</summary>
 
 ### Persistence
 
@@ -23,8 +23,8 @@ project tidied up, the entity should go in a separate package.
 ```kotlin
 @Entity
 class User(
-
   @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
   var id: Int?,
 
   @Column
@@ -67,10 +67,8 @@ internal class UserServiceImpl(private val userRepository: UserRepository) : Use
   }
 
   override fun createUser(firstName: String, lastName: String): User {
-    val user = User()
-    user.firstName = firstName
-    user.lastName = lastName
-    return userRepository.safe(user)
+    val user = User(null, firstName, lastName)
+    return userRepository.save(user)
   }
 
   override fun getUsersWithSameLastName(): List<SameUser> {
@@ -90,7 +88,8 @@ internal class UserServiceImpl(private val userRepository: UserRepository) : Use
 The last step in order to complete the microservice is creating its public API.
 
 ```kotlin
-@RestController("/api/v1/users")
+@RestController
+@RequestMapping("/api/v1/users")
 class UserController(private val userService: UserService) {
 
   @GetMapping
@@ -100,16 +99,16 @@ class UserController(private val userService: UserService) {
 
   @PostMapping
   fun createUser(@RequestBody @Valid request: UserDto): UserDto {
-    return UserDto.from(userService.createUser(request.firstName, request.lastName))
+    return UserDto.from(userService.createUser(request.firstName!!, request.lastName!!))
   }
 
   @GetMapping("/same-name")
-  fun sameLastName(): List<SameNameDto> {
-    return userService.getUsersWithSameLastName().map { SameUserDto.from(it) }
+  fun sameLastName(): List<SameUserDto> {
+    return userService.getUsersWithSameLastName().map { it.toDto() }
   }
 
   @DeleteMapping("/{userId}")
-  fun deleteUser(@RequestParam userId: Int) {
+  fun deleteUser(@PathVariable userId: Int) {
     userService.deleteUser(userId)
   }
 }
@@ -137,12 +136,14 @@ data class UserDto(
 data class SameUserDto(
   var lastName: String,
   var count: Int
-) {
-  companion object {
-    fun from(sameUser: SameUser): SameUserDto {
-      return SameUserDto(sameUser.lastName, sameUser.count)
-    }
-  }
+)
+```
+
+```kotlin
+MapperExtensions.kt
+
+fun SameUser.toDto(): SameUserDto {
+  return SameUserDto(this.lastName, this.count)
 }
 ```
 
