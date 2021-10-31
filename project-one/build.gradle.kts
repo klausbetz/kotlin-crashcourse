@@ -17,14 +17,17 @@ repositories {
 }
 
 dependencies {
+  implementation(kotlin("reflect"))
+  implementation(kotlin("stdlib"))
+
   implementation("org.springframework.boot:spring-boot-starter-data-jdbc")
   implementation("org.springframework.boot:spring-boot-starter-data-jpa")
   implementation("org.springframework.boot:spring-boot-starter-web")
-  implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
-  implementation(kotlin("reflect"))
-  implementation(kotlin("stdlib"))
-  runtimeOnly("com.h2database:h2")
+  implementation("org.springframework.boot:spring-boot-starter-validation")
   testImplementation("org.springframework.boot:spring-boot-starter-test")
+
+  implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+  runtimeOnly("com.h2database:h2")
 }
 
 tasks.withType<KotlinCompile> {
